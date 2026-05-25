@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: sigma-social
+    env: python
+    plan: starter
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application"
+    envVars:
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        value: "https://*.onrender.com"
+      - key: PYTHON_VERSION
+        value: "3.12.3"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: sigma-social-db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: sigma-social-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: sigma-social-db
+          property: password
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: sigma-social-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: sigma-social-db
+          property: port
+
+databases:
+  - name: sigma-social-db
+    plan: starter
