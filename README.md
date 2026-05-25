@@ -33,3 +33,6 @@ Production-ready Django starter for a social media platform.
 - If you still see **400 Bad Request**, confirm Render env variables are present and restart deploy.
 - This project auto-trusts runtime hostnames from `RENDER_EXTERNAL_HOSTNAME`, `RENDER_HOSTNAME`, and `RENDER_EXTERNAL_URL`.
 - You can also explicitly set `DJANGO_ALLOWED_HOSTS` (comma-separated) and `DJANGO_CSRF_TRUSTED_ORIGINS` (comma-separated `https://...` origins).
+
+
+- Render PostgreSQL usually requires SSL. Keep `POSTGRES_SSLMODE=require` in production to avoid runtime write errors (often seen during registration).
