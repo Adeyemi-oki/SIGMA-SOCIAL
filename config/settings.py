@@ -1,5 +1,5 @@
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, unquote, urlparse
 import os
 
 from dotenv import load_dotenv
@@ -16,6 +16,47 @@ def env_list(name: str, default: str = "") -> list[str]:
     raw = os.getenv(name, default)
     return [item.strip() for item in raw.split(",") if item.strip()]
 
+
+
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-change-me")
+DEBUG = env_bool("DJANGO_DEBUG", False)
+
+
+def database_config() -> dict:
+    database_url = os.getenv("DATABASE_URL", "").strip()
+    if database_url:
+        parsed = urlparse(database_url)
+        if parsed.scheme not in {"postgres", "postgresql"}:
+            raise ValueError("DATABASE_URL must use postgres:// or postgresql://")
+
+        options = dict(parse_qsl(parsed.query))
+        if "sslmode" not in options:
+            options["sslmode"] = os.getenv("POSTGRES_SSLMODE", "require" if not DEBUG else "prefer")
+
+        return {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": unquote(parsed.path.lstrip("/")),
+            "USER": unquote(parsed.username or ""),
+            "PASSWORD": unquote(parsed.password or ""),
+            "HOST": parsed.hostname or "",
+            "PORT": str(parsed.port or "5432"),
+            "CONN_MAX_AGE": int(os.getenv("POSTGRES_CONN_MAX_AGE", "60")),
+            "OPTIONS": options,
+        }
+
+    return {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB", "sigma_social"),
+        "USER": os.getenv("POSTGRES_USER", "postgres"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "postgres"),
+        "HOST": os.getenv("POSTGRES_HOST", "localhost"),
+        "PORT": os.getenv("POSTGRES_PORT", "5432"),
+        "CONN_MAX_AGE": int(os.getenv("POSTGRES_CONN_MAX_AGE", "60")),
+        "OPTIONS": {
+            "sslmode": os.getenv("POSTGRES_SSLMODE", "require" if not DEBUG else "prefer"),
+        },
+    }
+
 def collect_runtime_hostnames() -> list[str]:
     hosts: list[str] = []
     for key in ("RENDER_EXTERNAL_HOSTNAME", "RENDER_HOSTNAME"):
@@ -31,9 +72,6 @@ def collect_runtime_hostnames() -> list[str]:
 
     # Preserve order, remove duplicates.
     return list(dict.fromkeys(hosts))
-
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-change-me")
-DEBUG = env_bool("DJANGO_DEBUG", False)
 
 # Render provides the canonical hostname here. We add it automatically to avoid Bad Request
 # when DJANGO_ALLOWED_HOSTS is incomplete.
@@ -96,21 +134,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "sigma_social"),
-        "USER": os.getenv("POSTGRES_USER", "postgres"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", "postgres"),
-        "HOST": os.getenv("POSTGRES_HOST", "localhost"),
-        "PORT": os.getenv("POSTGRES_PORT", "5432"),
-        "CONN_MAX_AGE": int(os.getenv("POSTGRES_CONN_MAX_AGE", "60")),
-        "OPTIONS": {
-            "sslmode": os.getenv("POSTGRES_SSLMODE", "require" if not DEBUG else "prefer"),
-        },
-    }
-}
+DATABASES = {"default": database_config()}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

@@ -1,8 +1,12 @@
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
+
+User = get_user_model()
 
 
 def register(request):
@@ -49,3 +53,31 @@ def logout_view(request):
 @login_required(login_url="login")
 def home(request):
     return render(request, "users/home.html")
+
+
+@staff_member_required(login_url="login")
+def registered_users_admin(request):
+    users = User.objects.only(
+        "id",
+        "username",
+        "email",
+        "is_staff",
+        "is_superuser",
+        "is_active",
+        "date_joined",
+    ).order_by("-date_joined")
+    return render(request, "users/registered_users_admin.html", {"registered_users": users})
+
+
+@staff_member_required(login_url="login")
+@require_POST
+def delete_registered_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if user == request.user:
+        messages.error(request, "You cannot remove your own admin account from this page.")
+        return redirect("registered_users_admin")
+
+    username = user.get_username()
+    user.delete()
+    messages.success(request, f"Removed user {username}.")
+    return redirect("registered_users_admin")

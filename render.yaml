@@ -12,30 +12,22 @@ services:
         value: ".onrender.com"
       - key: DJANGO_CSRF_TRUSTED_ORIGINS
         value: "https://*.onrender.com"
+      - key: USE_X_FORWARDED_HOST
+        value: "True"
+      - key: SECURE_SSL_REDIRECT
+        value: "False"
       - key: PYTHON_VERSION
         value: "3.12.3"
       - key: DJANGO_SECRET_KEY
         generateValue: true
-      - key: POSTGRES_DB
+      - key: DATABASE_URL
         fromDatabase:
           name: sigma-social-db
-          property: database
-      - key: POSTGRES_USER
-        fromDatabase:
-          name: sigma-social-db
-          property: user
-      - key: POSTGRES_PASSWORD
-        fromDatabase:
-          name: sigma-social-db
-          property: password
-      - key: POSTGRES_HOST
-        fromDatabase:
-          name: sigma-social-db
-          property: host
-      - key: POSTGRES_PORT
-        fromDatabase:
-          name: sigma-social-db
-          property: port
+          property: connectionString
+      - key: POSTGRES_SSLMODE
+        value: "require"
+      - key: POSTGRES_CONN_MAX_AGE
+        value: "60"
 
 databases:
   - name: sigma-social-db

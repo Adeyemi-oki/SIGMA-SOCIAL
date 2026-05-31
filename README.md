@@ -36,3 +36,10 @@ Production-ready Django starter for a social media platform.
 
 
 - Render PostgreSQL usually requires SSL. Keep `POSTGRES_SSLMODE=require` in production to avoid runtime write errors (often seen during registration).
+
+
+## Admin user management
+- Staff users can visit `/staff/users/` to see registered accounts and remove users.
+- This page intentionally shows account fields only and does not expose user posts.
+
+- The Render blueprint now uses `DATABASE_URL` from the managed Postgres `connectionString`, which avoids mismatched database host/user/password variables causing 500 errors on login or registration.
