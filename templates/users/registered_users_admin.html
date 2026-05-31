@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registered Users | Sigma Social</title>
+</head>
+<body>
+    <h1>Registered Users</h1>
+    <p>This admin page only shows account information. It does not display user posts.</p>
+
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Staff</th>
+                <th>Active</th>
+                <th>Date joined</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for registered_user in registered_users %}
+                <tr>
+                    <td>{{ registered_user.username }}</td>
+                    <td>{{ registered_user.email|default:"—" }}</td>
+                    <td>{{ registered_user.is_staff }}</td>
+                    <td>{{ registered_user.is_active }}</td>
+                    <td>{{ registered_user.date_joined }}</td>
+                    <td>
+                        {% if registered_user == request.user %}
+                            Current admin
+                        {% else %}
+                            <form method="post" action="{% url 'delete_registered_user' registered_user.id %}">
+                                {% csrf_token %}
+                                <button type="submit">Remove user</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6">No registered users yet.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p><a href="{% url 'home' %}">Back to home</a></p>
+</body>
+</html>
