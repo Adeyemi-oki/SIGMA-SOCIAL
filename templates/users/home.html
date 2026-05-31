@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home | Sigma Social</title>
+</head>
+<body>
+    <h1>Sigma Social Home - Logged in user dashboard coming soon</h1>
+    {% if request.user.is_staff %}
+        <p><a href="{% url 'registered_users_admin' %}">Manage registered users</a></p>
+    {% endif %}
+    <p><a href="{% url 'logout' %}">Logout</a></p>
+</body>
+</html>
